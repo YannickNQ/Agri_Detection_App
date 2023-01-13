@@ -5,11 +5,11 @@ from io import BytesIO
 from PIL import Image
 import tensorflow as tf
 from tensorflow import keras
+import requests
 
 app = FastAPI()
 
-model_path = "D:/Agri_Project/Agri_Detection_App/savedmodels/1"
-MODEL = keras.models.load_model(model_path, compile=False)
+endpoint = "http://localhost:8501/v1/models/Agri_Detection_App:predict"
 
 CLASS_NAMES = ["Tizon Tardio", "Tizon Temprano", "Saludable"]
 @app.get("/ping")
@@ -24,9 +24,16 @@ def read_file_as_image(data) -> np.ndarray:
 async def predict( file: UploadFile = File(...)):
     image = read_file_as_image(await file.read())
     img_batch = np.expand_dims(image, 0)
-    predictions = MODEL.predict(img_batch)
-    predicted_class = CLASS_NAMES[np.argmax(predictions[0])]
-    confidence = np.max(predictions[0])
+
+    json_data = {
+        "instances": img_batch.tolist()
+    }
+    
+    response = requests.post(endpoint, json=json_data)
+    prediction = response.json()["predictions"][0]
+
+    predicted_class = CLASS_NAMES[np.argmax(prediction)]
+    confidence = np.max(prediction)
 
     return {
         'class': predicted_class,
