@@ -1,12 +1,26 @@
 from fastapi import FastAPI, File, UploadFile
 import uvicorn
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
 from io import BytesIO
 from PIL import Image
 import tensorflow as tf
 from tensorflow import keras
 
 app = FastAPI()
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 model_path = "D:/Agri_Project/Agri_Detection_App/savedmodels/1"
 MODEL = keras.models.load_model(model_path, compile=False)
